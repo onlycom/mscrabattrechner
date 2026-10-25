@@ -1,0 +1,530 @@
+
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSC Kreuzfahrten Rabattrechner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        msc: {
+                            navy: '#002B49',
+                            blue: '#00538C',
+                            gold: '#C5A059',
+                            goldHover: '#B38E46',
+                            lightBg: '#F4F7F9',
+                            cardBg: '#FFFFFF',
+                            border: '#E2E8F0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Styling for smooth transitions & luxury feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1E293B;
+        }
+        .msc-gradient {
+            background: linear-gradient(135deg, #001E34 0%, #002B49 60%, #00406E 100%);
+        }
+        .gold-badge {
+            background: linear-gradient(135deg, #C5A059 0%, #D4AF37 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        /* Hide native spinner on number inputs */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col justify-between bg-slate-100 text-slate-800">
+
+    <!-- Header Section -->
+    <header class="msc-gradient text-white shadow-lg border-b border-msc-gold/30">
+        <div class="max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 text-msc-gold">
+                    <i data-lucide="ship" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                        MSC Rabattrechner
+                        <span class="text-xs bg-msc-gold/20 text-msc-gold font-medium px-2.5 py-0.5 rounded-full border border-msc-gold/40">Inoffiziell</span>
+                    </h1>
+                    <p class="text-xs text-slate-300 mt-0.5">Exakte Berechnung gestaffelter MSC-Vorteile & Cashback</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 text-slate-200">
+                <i data-lucide="info" class="w-4 h-4 text-msc-gold"></i>
+                <span>Rabatte gelten rein auf den Kabinenpreis</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8 flex-grow w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left Column: Inputs & Options -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Card 1: Preisbasis -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+                        <h2 class="text-lg font-bold text-msc-navy flex items-center gap-2">
+                            <i data-lucide="calculator" class="w-5 h-5 text-msc-blue"></i>
+                            1. Preis-Berechnungsgrundlage
+                        </h2>
+                        <span class="text-xs font-medium text-slate-400">Automatische Gegenberechnung</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Mode Selector -->
+                        <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 mb-4">
+                            <button id="mode-total" onclick="setMode('total')" class="py-2 px-3 rounded-lg transition-all shadow-xs bg-white text-msc-navy font-bold">
+                                Gesamtpreis & Servicegebühr
+                            </button>
+                            <button id="mode-direct" onclick="setMode('direct')" class="py-2 px-3 rounded-lg transition-all text-slate-500 hover:text-msc-navy">
+                                Direkt Kabinenpreis eingeben
+                            </button>
+                        </div>
+
+                        <!-- Inputs Container -->
+                        <div id="input-group-total" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Gesamtreisepreis (inkl. Hotelservicegebühr / Extras) (€)
+                                </label>
+                                <div class="relative rounded-xl shadow-xs">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        €
+                                    </div>
+                                    <input type="number" id="input-total-price" value="2000" min="0" step="10" 
+                                        class="block w-full pl-9 pr-4 py-2.5 text-slate-800 bg-slate-50/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-msc-blue focus:border-msc-blue focus:bg-white text-base font-semibold transition"
+                                        placeholder="z.B. 2000" oninput="calculate()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Enthaltene Hotelservicegebühr / Trinkgelder (€)
+                                </label>
+                                <div class="relative rounded-xl shadow-xs">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        €
+                                    </div>
+                                    <input type="number" id="input-service-fee" value="168" min="0" step="1" 
+                                        class="block w-full pl-9 pr-4 py-2.5 text-slate-800 bg-slate-50/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-msc-blue focus:border-msc-blue focus:bg-white text-base font-semibold transition"
+                                        placeholder="z.B. 168 (2 Personen x 7 Nächte x 12€)" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="input-group-direct" class="space-y-4 hidden">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Reiner Kabinenpreis (€)
+                                </label>
+                                <div class="relative rounded-xl shadow-xs">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        €
+                                    </div>
+                                    <input type="number" id="input-cabin-price" value="1832" min="0" step="10" 
+                                        class="block w-full pl-9 pr-4 py-2.5 text-slate-800 bg-slate-50/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-msc-blue focus:border-msc-blue focus:bg-white text-base font-semibold transition"
+                                        placeholder="z.B. 1832" oninput="calculate()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Zusätzliche Gebühren / Servicegebühr (€) <span class="text-slate-400 font-normal">(wird nicht rabattiert)</span>
+                                </label>
+                                <div class="relative rounded-xl shadow-xs">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        €
+                                    </div>
+                                    <input type="number" id="input-extra-fee" value="168" min="0" step="1" 
+                                        class="block w-full pl-9 pr-4 py-2.5 text-slate-800 bg-slate-50/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-msc-blue focus:border-msc-blue focus:bg-white text-base font-semibold transition"
+                                        placeholder="z.B. 168" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculated Pure Cabin Price Preview Box -->
+                        <div class="mt-4 p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center justify-between">
+                            <span class="text-xs font-medium text-msc-blue flex items-center gap-1.5">
+                                <i data-lucide="bed-double" class="w-4 h-4"></i> Reiner Kabinenpreis (Basis für Rabatte):
+                            </span>
+                            <span id="display-base-cabin" class="text-base font-bold text-msc-navy">0,00 €</span>
+                        </div>
+
+                        <!-- Persons Optional Input -->
+                        <div class="pt-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                                Anzahl der Personen <span class="text-slate-400 font-normal">(für Preis pro Person)</span>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <div class="relative flex-1 rounded-xl shadow-xs">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i data-lucide="users" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="number" id="input-persons" value="2" min="1" max="10" 
+                                        class="block w-full pl-10 pr-4 py-2 text-slate-800 bg-slate-50/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-msc-blue focus:border-msc-blue focus:bg-white text-sm font-semibold transition"
+                                        oninput="calculate()">
+                                </div>
+                                <span class="text-xs text-slate-500">Personen</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Card 2: Rabatte & Cashback -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                    <div class="pb-4 mb-4 border-b border-slate-100">
+                        <h2 class="text-lg font-bold text-msc-navy flex items-center gap-2">
+                            <i data-lucide="percent" class="w-5 h-5 text-msc-blue"></i>
+                            2. Rabatte & Cashback auswählen
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Wähle die zutreffenden Rabatte in der vorgegebenen Reihenfolge</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Option 1: Voyagers Club -->
+                        <label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-slate-200 bg-slate-50/30 hover:bg-slate-50 transition cursor-pointer select-none group">
+                            <input type="checkbox" id="check-vc" checked onchange="calculate()"
+                                class="mt-0.5 rounded text-msc-blue focus:ring-msc-blue w-5 h-5 border-slate-300 cursor-pointer">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-sm text-slate-800 group-hover:text-msc-navy">1. MSC Voyagers Club Rabatt</span>
+                                    <span class="text-xs font-bold px-2 py-0.5 bg-blue-100 text-msc-blue rounded-md">-5%</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">5% auf den reinen Kabinenpreis für Clubmitglieder.</p>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: Corporate Benefits -->
+                        <label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-slate-200 bg-slate-50/30 hover:bg-slate-50 transition cursor-pointer select-none group">
+                            <input type="checkbox" id="check-cb" checked onchange="calculate()"
+                                class="mt-0.5 rounded text-msc-blue focus:ring-msc-blue w-5 h-5 border-slate-300 cursor-pointer">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-sm text-slate-800 group-hover:text-msc-navy">2. Corporate Benefits (CB)</span>
+                                    <span class="text-xs font-bold px-2 py-0.5 bg-blue-100 text-msc-blue rounded-md">-10%</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">10% auf den verbleibenden Kabinenpreis (nach Voyagers Club).</p>
+                            </div>
+                        </label>
+
+                        <!-- Option 3: Cashback -->
+                        <label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-slate-200 bg-amber-50/30 hover:bg-amber-50/60 border-amber-200/60 transition cursor-pointer select-none group">
+                            <input type="checkbox" id="check-cashback" checked onchange="calculate()"
+                                class="mt-0.5 rounded text-msc-gold focus:ring-msc-gold w-5 h-5 border-amber-300 cursor-pointer">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-sm text-slate-800 group-hover:text-msc-navy">3. Cashback (Drittanbieter / Shoop)</span>
+                                    <span class="text-xs font-bold px-2 py-0.5 bg-msc-gold/20 text-msc-navy border border-msc-gold/30 rounded-md">-5%</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">5% Auszahlung auf den verbleibenden Netto-Kabinenpreis nach allen Rabatten.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Results & Breakdown -->
+            <div class="lg:col-span-5 space-y-6 sticky top-6">
+                
+                <!-- Main Summary Highlight Card -->
+                <div class="msc-gradient text-white rounded-2xl p-6 shadow-xl border border-msc-gold/30 relative overflow-hidden">
+                    <!-- Subtle decorative background accent -->
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-msc-gold/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-msc-gold mb-1">Ergebnis Übersicht</h2>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <div>
+                            <span class="text-xs text-slate-300 block">Effektiver Endpreis</span>
+                            <span id="final-cost" class="text-3xl font-extrabold tracking-tight text-white">0,00 €</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-300 block">Pro Person</span>
+                            <span id="final-cost-pp" class="text-lg font-bold text-msc-gold">0,00 €</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-white/10 grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-xs text-slate-300 block">Gesamtersparnis</span>
+                            <span id="total-savings" class="text-xl font-bold text-emerald-400">0,00 €</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-300 block">Ersparnis in %</span>
+                            <span id="total-savings-percent" class="text-xl font-bold text-emerald-400">0,0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Breakdown Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                    <h3 class="text-sm font-bold text-msc-navy uppercase tracking-wider pb-3 border-b border-slate-100 flex items-center justify-between">
+                        <span>Schritt-für-Schritt Quittung</span>
+                        <i data-lucide="receipt" class="w-4 h-4 text-slate-400"></i>
+                    </h3>
+
+                    <div class="divide-y divide-slate-100 text-sm">
+                        <!-- Step 0: Base Input -->
+                        <div class="py-2.5 flex justify-between items-center text-slate-600">
+                            <span>Ursprünglicher Gesamtwert</span>
+                            <span id="receipt-original-total" class="font-medium text-slate-900">0,00 €</span>
+                        </div>
+
+                        <div class="py-2.5 flex justify-between items-center text-slate-500 pl-3 border-l-2 border-slate-200 text-xs">
+                            <span>- Hotelservice / Extras (fix)</span>
+                            <span id="receipt-service-fee" class="font-medium">0,00 €</span>
+                        </div>
+
+                        <div class="py-2.5 flex justify-between items-center bg-slate-50/80 px-2 rounded-lg font-medium text-slate-700 my-1">
+                            <span>= Ausgangs-Kabinenpreis</span>
+                            <span id="receipt-base-cabin">0,00 €</span>
+                        </div>
+
+                        <!-- Step 1: VC Discount -->
+                        <div id="row-vc" class="py-2.5 flex justify-between items-center text-emerald-700">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i> Voyagers Club (-5%)
+                            </span>
+                            <span id="receipt-vc-amount" class="font-semibold">-0,00 €</span>
+                        </div>
+
+                        <!-- Step 2: CB Discount -->
+                        <div id="row-cb" class="py-2.5 flex justify-between items-center text-emerald-700">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i> Corporate Benefits (-10%)
+                            </span>
+                            <span id="receipt-cb-amount" class="font-semibold">-0,00 €</span>
+                        </div>
+
+                        <!-- Intermediate Booking Price -->
+                        <div class="py-3 bg-blue-50/50 px-3 rounded-xl border border-blue-100 my-2">
+                            <div class="flex justify-between items-center font-bold text-msc-navy">
+                                <span>Zu zahlen an MSC (Buchung):</span>
+                                <span id="receipt-msc-pay" class="text-base">0,00 €</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                Reiner Kabinenpreis nach MSC-Rabatten: <span id="receipt-effective-cabin">0,00 €</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Cashback -->
+                        <div id="row-cashback" class="py-2.5 flex justify-between items-center text-amber-700 bg-amber-50/50 px-2 rounded-lg my-1">
+                            <span class="flex items-center gap-1.5 text-xs font-semibold">
+                                <i data-lucide="coins" class="w-3.5 h-3.5 text-msc-gold"></i> Cashback nach Reise (-5%)
+                            </span>
+                            <span id="receipt-cashback-amount" class="font-bold text-xs">-0,00 €</span>
+                        </div>
+
+                        <!-- Final Effective Total -->
+                        <div class="pt-3 pb-1 flex justify-between items-center font-extrabold text-slate-900 text-base">
+                            <span>Effektive Gesamtkosten:</span>
+                            <span id="receipt-final-effective" class="text-msc-navy text-lg">0,00 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Helpful Tip Box -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1.5">
+                    <div class="font-bold text-msc-navy flex items-center gap-1.5">
+                        <i data-lucide="lightbulb" class="w-4 h-4 text-msc-gold"></i> Wichtige Hinweise
+                    </div>
+                    <ul class="list-disc pl-4 space-y-1 text-slate-500">
+                        <li>Der Voyagers Club Rabatt ist direkt an dein MSC Profil gebunden.</li>
+                        <li>Corporate Benefits Gutscheincodes werden im Buchungsschritt eingegeben.</li>
+                        <li>Cashback (z.B. Shoop) wird erst Wochen nach der Reise ausgezahlt und errechnet sich aus dem Netto-Kaufpreis.</li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-12">
+        <p>Dies ist ein privates Berechnungstool. Alle Angaben ohne Gewähr. MSC Cruises ist eine eingetragene Marke.</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let currentMode = 'total'; // 'total' or 'direct'
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnTotal = document.getElementById('mode-total');
+            const btnDirect = document.getElementById('mode-direct');
+            const groupTotal = document.getElementById('input-group-total');
+            const groupDirect = document.getElementById('input-group-direct');
+
+            if (mode === 'total') {
+                btnTotal.className = 'py-2 px-3 rounded-lg transition-all shadow-xs bg-white text-msc-navy font-bold';
+                btnDirect.className = 'py-2 px-3 rounded-lg transition-all text-slate-500 hover:text-msc-navy';
+                groupTotal.classList.remove('hidden');
+                groupDirect.classList.add('hidden');
+            } else {
+                btnDirect.className = 'py-2 px-3 rounded-lg transition-all shadow-xs bg-white text-msc-navy font-bold';
+                btnTotal.className = 'py-2 px-3 rounded-lg transition-all text-slate-500 hover:text-msc-navy';
+                groupDirect.classList.remove('hidden');
+                groupTotal.classList.add('hidden');
+            }
+            calculate();
+        }
+
+        function formatEUR(val) {
+            return val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        }
+
+        function calculate() {
+            let originalTotal = 0;
+            let serviceFee = 0;
+            let baseCabinPrice = 0;
+
+            if (currentMode === 'total') {
+                originalTotal = parseFloat(document.getElementById('input-total-price').value) || 0;
+                serviceFee = parseFloat(document.getElementById('input-service-fee').value) || 0;
+                baseCabinPrice = Math.max(0, originalTotal - serviceFee);
+                // Sync direct inputs
+                document.getElementById('input-cabin-price').value = baseCabinPrice.toFixed(2);
+                document.getElementById('input-extra-fee').value = serviceFee;
+            } else {
+                baseCabinPrice = parseFloat(document.getElementById('input-cabin-price').value) || 0;
+                serviceFee = parseFloat(document.getElementById('input-extra-fee').value) || 0;
+                originalTotal = baseCabinPrice + serviceFee;
+                // Sync total inputs
+                document.getElementById('input-total-price').value = originalTotal.toFixed(2);
+                document.getElementById('input-service-fee').value = serviceFee;
+            }
+
+            const persons = Math.max(1, parseInt(document.getElementById('input-persons').value) || 1);
+
+            // Display base cabin price preview
+            document.getElementById('display-base-cabin').innerText = formatEUR(baseCabinPrice);
+
+            // Options
+            const applyVC = document.getElementById('check-vc').checked;
+            const applyCB = document.getElementById('check-cb').checked;
+            const applyCashback = document.getElementById('check-cashback').checked;
+
+            // Step 1: VC Discount (5% on pure cabin price)
+            let currentCabinPrice = baseCabinPrice;
+            let vcDiscount = 0;
+            if (applyVC) {
+                vcDiscount = currentCabinPrice * 0.05;
+                currentCabinPrice -= vcDiscount;
+            }
+
+            // Step 2: CB Discount (10% on remaining cabin price)
+            let cbDiscount = 0;
+            if (applyCB) {
+                cbDiscount = currentCabinPrice * 0.10;
+                currentCabinPrice -= cbDiscount;
+            }
+
+            // Effective Cabin Price after direct discounts
+            const effectiveCabinPrice = currentCabinPrice;
+
+            // Direct Payable to MSC
+            const mscPayable = effectiveCabinPrice + serviceFee;
+
+            // Step 3: Cashback (5% on remaining cabin price after VC & CB)
+            let cashbackAmount = 0;
+            if (applyCashback) {
+                cashbackAmount = effectiveCabinPrice * 0.05;
+            }
+
+            // Final Effective Cost
+            const finalEffectiveCost = mscPayable - cashbackAmount;
+            const finalCostPerPerson = finalEffectiveCost / persons;
+
+            // Total Savings
+            const totalSavings = originalTotal - finalEffectiveCost;
+            const totalSavingsPercent = originalTotal > 0 ? (totalSavings / originalTotal) * 100 : 0;
+
+            // Render Results & Breakdown
+            document.getElementById('final-cost').innerText = formatEUR(finalEffectiveCost);
+            document.getElementById('final-cost-pp').innerText = formatEUR(finalCostPerPerson);
+            document.getElementById('total-savings').innerText = formatEUR(totalSavings);
+            document.getElementById('total-savings-percent').innerText = totalSavingsPercent.toFixed(1).replace('.', ',') + '%';
+
+            // Receipt Breakdown Render
+            document.getElementById('receipt-original-total').innerText = formatEUR(originalTotal);
+            document.getElementById('receipt-service-fee').innerText = formatEUR(serviceFee);
+            document.getElementById('receipt-base-cabin').innerText = formatEUR(baseCabinPrice);
+
+            // Row visibility & values
+            const rowVC = document.getElementById('row-vc');
+            if (applyVC) {
+                rowVC.classList.remove('opacity-40', 'line-through');
+                document.getElementById('receipt-vc-amount').innerText = '-' + formatEUR(vcDiscount);
+            } else {
+                rowVC.classList.add('opacity-40');
+                document.getElementById('receipt-vc-amount').innerText = '0,00 €';
+            }
+
+            const rowCB = document.getElementById('row-cb');
+            if (applyCB) {
+                rowCB.classList.remove('opacity-40', 'line-through');
+                document.getElementById('receipt-cb-amount').innerText = '-' + formatEUR(cbDiscount);
+            } else {
+                rowCB.classList.add('opacity-40');
+                document.getElementById('receipt-cb-amount').innerText = '0,00 €';
+            }
+
+            document.getElementById('receipt-msc-pay').innerText = formatEUR(mscPayable);
+            document.getElementById('receipt-effective-cabin').innerText = formatEUR(effectiveCabinPrice);
+
+            const rowCashback = document.getElementById('row-cashback');
+            if (applyCashback) {
+                rowCashback.classList.remove('opacity-40');
+                document.getElementById('receipt-cashback-amount').innerText = '-' + formatEUR(cashbackAmount);
+            } else {
+                rowCashback.classList.add('opacity-40');
+                document.getElementById('receipt-cashback-amount').innerText = '0,00 €';
+            }
+
+            document.getElementById('receipt-final-effective').innerText = formatEUR(finalEffectiveCost);
+        }
+
+        // Initial Calculation on Page Load
+        window.onload = function() {
+            calculate();
+        };
+    </script>
+</body>
+</html>
+```
